@@ -1,6 +1,6 @@
 /* ===================================================
    LIONLOBS — Premium JavaScript v3.0 OTIMIZADO
-   Performance, Animações Suaves e Interatividade
+   Performance First — Sem Travamentos
    =================================================== */
 
 'use strict';
@@ -14,10 +14,16 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
   const header = $('#header');
   if (!header) return;
 
+  let ticking = false;
   const onScroll = () => {
-    header.classList.toggle('scrolled', window.scrollY > 60);
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        header.classList.toggle('scrolled', window.scrollY > 60);
+        ticking = false;
+      });
+      ticking = true;
+    }
   };
-  
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 })();
@@ -25,7 +31,7 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 // ===== MENU MOBILE =====
 (function initMobileMenu() {
   const toggle = $('#menuToggle');
-  const menu = $('#navMenu');
+  const menu   = $('#navMenu');
   if (!toggle || !menu) return;
 
   toggle.addEventListener('click', () => {
@@ -53,26 +59,25 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
 // ===== MODAL DE LOGIN =====
 (function initLogin() {
-  const overlay = $('#loginOverlay');
-  const btnLogin = $('#btnLogin');
-  const btnClose = $('#loginClose');
+  const overlay   = $('#loginOverlay');
+  const btnLogin  = $('#btnLogin');
+  const btnClose  = $('#loginClose');
+  const footerBtn = $('#footerLogin');
   if (!overlay) return;
 
   const openModal = () => {
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
   };
-  
   const closeModal = () => {
     overlay.classList.remove('active');
     document.body.style.overflow = '';
   };
 
   btnLogin?.addEventListener('click', openModal);
+  footerBtn?.addEventListener('click', e => { e.preventDefault(); openModal(); });
   btnClose?.addEventListener('click', closeModal);
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) closeModal();
-  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeModal();
@@ -96,11 +101,11 @@ function showToast(message, type = 'info') {
     border-radius: 12px;
     font-size: 0.9rem;
     font-weight: 600;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
     z-index: 99999;
     transform: translateY(20px);
     opacity: 0;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
     max-width: 320px;
     border: 1px solid rgba(206,169,115,0.3);
   `;
@@ -115,7 +120,7 @@ function showToast(message, type = 'info') {
   setTimeout(() => {
     toast.style.transform = 'translateY(20px)';
     toast.style.opacity = '0';
-    setTimeout(() => toast.remove(), 300);
+    setTimeout(() => toast.remove(), 400);
   }, 3500);
 }
 
@@ -129,7 +134,7 @@ function showToast(message, type = 'info') {
       if (entry.isIntersecting) {
         const siblings = [...entry.target.parentElement.children];
         const index = siblings.indexOf(entry.target);
-        const delay = Math.min(index * 60, 300);
+        const delay = Math.min(index * 80, 400);
 
         setTimeout(() => {
           entry.target.classList.add('visible');
@@ -139,7 +144,7 @@ function showToast(message, type = 'info') {
       }
     });
   }, {
-    threshold: 0.1,
+    threshold: 0.12,
     rootMargin: '0px 0px -40px 0px'
   });
 
@@ -152,12 +157,12 @@ function showToast(message, type = 'info') {
   if (!counters.length) return;
 
   const animateCounter = (el) => {
-    const target = parseInt(el.dataset.target, 10);
+    const target   = parseInt(el.dataset.target, 10);
     const duration = 2000;
-    const start = performance.now();
+    const start    = performance.now();
 
     const update = (now) => {
-      const elapsed = now - start;
+      const elapsed  = now - start;
       const progress = Math.min(elapsed / duration, 1);
       const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
       el.textContent = Math.floor(ease * target);
@@ -176,6 +181,23 @@ function showToast(message, type = 'info') {
   }, { threshold: 0.5 });
 
   counters.forEach(el => observer.observe(el));
+})();
+
+// ===== FAQ ACCORDION =====
+(function initFAQ() {
+  const items = $$('.faq-item');
+  if (!items.length) return;
+
+  items.forEach(item => {
+    const btn = item.querySelector('.faq-q');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      const isOpen = item.classList.contains('open');
+      items.forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    });
+  });
 })();
 
 // ===== SMOOTH SCROLL =====
@@ -197,7 +219,7 @@ function showToast(message, type = 'info') {
 // ===== ACTIVE NAV LINK =====
 (function initActiveNav() {
   const sections = $$('section[id]');
-  const links = $$('.nav-link[href^="#"]');
+  const links    = $$('.nav-link[href^="#"]');
   if (!sections.length || !links.length) return;
 
   const observer = new IntersectionObserver((entries) => {
@@ -225,7 +247,7 @@ function showToast(message, type = 'info') {
   form.addEventListener('submit', e => {
     e.preventDefault();
 
-    const btn = form.querySelector('button[type="submit"]');
+    const btn  = form.querySelector('button[type="submit"]');
     const span = btn.querySelector('span');
 
     const nome = form.querySelector('input[type="text"]')?.value || 'Cliente';
@@ -234,8 +256,7 @@ function showToast(message, type = 'info') {
     const servico = form.querySelector('select')?.value || 'Serviço não especificado';
     const mensagem = form.querySelector('textarea')?.value || '';
 
-    const textoWhatsApp = `Olá LionLobs! 👋\n\nMeu nome é ${nome}\nWhatsApp: ${whatsapp}\nE-mail: ${email}\n\nServiço de Interesse: ${servico}\n\nMensagem: ${mensagem}\n\nGostaria de conhecer mais sobre seus serviços!`;
-
+    const textoWhatsApp = `Olá LionLobs!\n\nMeu nome é ${nome}\nWhatsApp: ${whatsapp}\nE-mail: ${email}\n\nServiço de Interesse: ${servico}\n\nMensagem: ${mensagem}`;
     const mensagemCodificada = encodeURIComponent(textoWhatsApp);
     const linkWhatsApp = `https://wa.me/5548984380321?text=${mensagemCodificada}`;
 
@@ -248,119 +269,30 @@ function showToast(message, type = 'info') {
       if (span) span.textContent = 'Enviar Mensagem';
       form.reset();
       showToast('Abrindo WhatsApp com sua mensagem pronta!', 'success');
-    }, 600);
+    }, 800);
   });
 })();
 
-// ===== PARALLAX HERO BG =====
-(function initParallax() {
-  const bg = $('.hero-bg-img');
-  if (!bg) return;
+// ===== NEWSLETTER =====
+(function initNewsletter() {
+  const btn = $('.newsletter button');
+  const inp = $('.newsletter input');
+  if (!btn || !inp) return;
 
-  let ticking = false;
-  
-  const updateParallax = () => {
-    const scrollY = window.scrollY;
-    if (scrollY < window.innerHeight * 1.5) {
-      bg.style.transform = `translateY(${scrollY * 0.3}px)`;
+  btn.addEventListener('click', () => {
+    const email = inp.value.trim();
+    if (!email || !email.includes('@')) {
+      showToast('Por favor, insira um e-mail válido.');
+      return;
     }
-    ticking = false;
-  };
-
-  window.addEventListener('scroll', () => {
-    if (!ticking) {
-      requestAnimationFrame(updateParallax);
-      ticking = true;
-    }
-  }, { passive: true });
-})();
-
-// ===== CARD TILT EFFECT (Desktop) =====
-(function initCardTilt() {
-  if (window.innerWidth < 1024) return;
-
-  const cards = $$('.service-card, .pricing-card, .testimonial-card, .social-card');
-
-  cards.forEach(card => {
-    card.addEventListener('mousemove', e => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const cx = rect.width / 2;
-      const cy = rect.height / 2;
-      const rotX = ((y - cy) / cy) * -4;
-      const rotY = ((x - cx) / cx) * 4;
-
-      card.style.transform = `
-        translateY(-4px)
-        rotateX(${rotX}deg)
-        rotateY(${rotY}deg)
-      `;
-    });
-
-    card.addEventListener('mouseleave', () => {
-      card.style.transform = '';
-    });
-  });
-})();
-
-// ===== LOADING SCREEN =====
-(function initLoading() {
-  const loader = document.createElement('div');
-  loader.id = 'pageLoader';
-  loader.style.cssText = `
-    position: fixed;
-    inset: 0;
-    background: #0d0b0c;
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 20px;
-    transition: opacity 0.5s ease;
-  `;
-  loader.innerHTML = `
-    <img src="lionlobs-logo.png" alt="LionLobs" style="height:60px;opacity:0;transition:opacity 0.4s ease 0.2s;">
-    <div style="
-      width: 200px;
-      height: 2px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 2px;
-      overflow: hidden;
-    ">
-      <div id="loaderBar" style="
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #a68354, #cea973, #e6bc75);
-        border-radius: 2px;
-        transition: width 1s cubic-bezier(0.4,0,0.2,1);
-      "></div>
-    </div>
-  `;
-  document.body.appendChild(loader);
-
-  setTimeout(() => {
-    const img = loader.querySelector('img');
-    if (img) img.style.opacity = '1';
-  }, 100);
-
-  setTimeout(() => {
-    const bar = $('#loaderBar');
-    if (bar) bar.style.width = '100%';
-  }, 200);
-
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      loader.style.opacity = '0';
-      setTimeout(() => loader.remove(), 500);
-    }, 600);
+    inp.value = '';
+    showToast('Inscrição realizada com sucesso! Confira seu e-mail.', 'success');
   });
 })();
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('%c🦁 LionLobs — Site Premium v3.0 Otimizado', 'color: #cea973; font-size: 14px; font-weight: bold;');
+  console.log('%c🦁 LionLobs — Site Premium v3.0 OTIMIZADO', 'color: #cea973; font-size: 14px; font-weight: bold;');
 });
 
 // ===== CHATBOT IA =====
@@ -376,10 +308,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!floatBtn || !chatbot) return;
 
   const aiResponses = {
-    'Quais são seus serviços?': 'Oferecemos edição profissional de vídeos, gerenciamento completo de redes sociais, identidade visual e branding, landing pages premium, tráfego pago estratégico, e consultoria em neuromarketing. Qual desses serviços te interessa? ✨',
-    'Qual é o valor dos pacotes?': 'Nossos pacotes variam de acordo com o serviço. Temos opções desde 1 vídeo editado até planos mensais com 16 vídeos/mês. Para valores específicos, recomendo falar com nosso especialista via WhatsApp! 💬',
-    'Como funciona o suporte?': 'Oferecemos suporte diário via WhatsApp em todos os nossos planos. Você terá acesso direto ao nosso time para tirar dúvidas, solicitar ajustes e acompanhar seus projetos em tempo real. ⚡',
-    'Falar com um especialista': 'Ótimo! Vou conectá-lo com nosso especialista. Clique no botão "Acessar via WhatsApp" para falar diretamente conosco. Estamos prontos para ajudar! 🤍'
+    'Quais são seus serviços?': 'Oferecemos edição profissional de vídeos, gerenciamento completo de redes sociais, identidade visual e branding, landing pages premium, tráfego pago estratégico, e consultoria em neuromarketing. Qual desses serviços te interessa?',
+    'Qual é o valor dos pacotes?': 'Nossos pacotes variam de acordo com o serviço. Temos opções desde 1 vídeo editado até planos mensais com 16 vídeos/mês. Para valores específicos, recomendo falar com nosso especialista via WhatsApp!',
+    'Como funciona o suporte?': 'Oferecemos suporte diário via WhatsApp em todos os nossos planos. Você terá acesso direto ao nosso time para tirar dúvidas, solicitar ajustes e acompanhar seus projetos em tempo real.',
+    'Falar com um especialista': 'Ótimo! Vou conectá-lo com nosso especialista. Clique no botão "Acessar via WhatsApp" para falar diretamente conosco. Estamos prontos para ajudar!'
   };
 
   floatBtn.addEventListener('click', () => {
@@ -417,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
       messagesContainer.appendChild(botMsg);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
       input.focus();
-    }, 500);
+    }, 600);
   };
 
   sendBtn.addEventListener('click', sendMessage);
@@ -443,19 +375,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const lower = userInput.toLowerCase();
     
     if (lower.includes('preço') || lower.includes('valor') || lower.includes('custa')) {
-      return 'Temos opções de pacotes para todos os orçamentos! Desde edição de vídeos individuais até planos mensais completos. Fale com nosso especialista para um orçamento personalizado. 📈';
+      return 'Temos opções de pacotes para todos os orçamentos! Desde edição de vídeos individuais até planos mensais completos. Fale com nosso especialista para um orçamento personalizado.';
     }
     if (lower.includes('video') || lower.includes('edição')) {
-      return 'Nossa edição de vídeos inclui roteiro pronto, edição profissional e legendas otimizadas. Temos pacotes de 1 a 16 vídeos por mês! ✨';
+      return 'Nossa edição de vídeos inclui roteiro pronto, edição profissional e legendas otimizadas. Temos pacotes de 1 a 16 vídeos por mês!';
     }
     if (lower.includes('rede') || lower.includes('social') || lower.includes('instagram') || lower.includes('tiktok')) {
-      return 'Gerenciamos suas redes sociais com conteúdo profissional, design, legendas e postagens no melhor horário. Suporte diário incluído! 💬';
+      return 'Gerenciamos suas redes sociais com conteúdo profissional, design, legendas e postagens no melhor horário. Suporte diário incluído!';
     }
     if (lower.includes('contato') || lower.includes('whatsapp') || lower.includes('telefone')) {
-      return 'Você pode nos contatar via WhatsApp (48) 98438-0321 ou email lionlobs@gmail.com. Resposta em até 2 horas! ⚡';
+      return 'Você pode nos contatar via WhatsApp (48) 98438-0321 ou email lionlobs@gmail.com. Resposta em até 2 horas!';
     }
     if (lower.includes('obrigado') || lower.includes('vlw') || lower.includes('thanks')) {
-      return 'De nada! Fico feliz em ajudar. Tem mais alguma dúvida? 🤍';
+      return 'De nada! Fico feliz em ajudar. Tem mais alguma dúvida?';
     }
     
     return 'Ótima pergunta! Para uma resposta mais detalhada, recomendo falar com nosso especialista via WhatsApp. Estamos sempre prontos para ajudar!';
