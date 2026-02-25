@@ -303,7 +303,6 @@ function showToast(message, type = 'info') {
 
   sections.forEach(s => observer.observe(s));
 })();
-
 // ===== FORMULÁRIO DE CONTATO =====
 (function initContactForm() {
   const form = $('#contactForm');
@@ -315,19 +314,33 @@ function showToast(message, type = 'info') {
     const btn  = form.querySelector('button[type="submit"]');
     const span = btn.querySelector('span');
 
-    btn.disabled = true;
-    if (span) span.textContent = 'Enviando...';
+    // Obter dados do formulário
+    const nome = form.querySelector('input[type="text"]')?.value || 'Cliente';
+    const whatsapp = form.querySelector('input[type="tel"]')?.value || '';
+    const email = form.querySelector('input[type="email"]')?.value || '';
+    const servico = form.querySelector('select')?.value || 'Serviço não especificado';
+    const mensagem = form.querySelector('textarea')?.value || '';
 
-    // Simula envio
+    // Montar mensagem para WhatsApp
+    const textoWhatsApp = `Olá LionLobs! 👋\n\nMeu nome é ${nome}\nWhatsApp: ${whatsapp}\nE-mail: ${email}\n\nServiço de Interesse: ${servico}\n\nMensagem: ${mensagem}\n\nGostaria de conhecer mais sobre seus serviços!`;
+
+    // Codificar para URL
+    const mensagemCodificada = encodeURIComponent(textoWhatsApp);
+    const linkWhatsApp = `https://wa.me/5548984380321?text=${mensagemCodificada}`;
+
+    btn.disabled = true;
+    if (span) span.textContent = 'Redirecionando...';
+
+    // Redirecionar para WhatsApp após breve delay
     setTimeout(() => {
+      window.open(linkWhatsApp, '_blank');
       btn.disabled = false;
       if (span) span.textContent = 'Enviar Mensagem';
       form.reset();
-      showToast('Mensagem enviada! Entraremos em contato em breve.', 'success');
-    }, 2000);
+      showToast('Abrindo WhatsApp com sua mensagem pronta!', 'success');
+    }, 800);
   });
-})();
-
+});
 // ===== NEWSLETTER =====
 (function initNewsletter() {
   const btn = $('.newsletter button');
@@ -341,9 +354,9 @@ function showToast(message, type = 'info') {
       return;
     }
     inp.value = '';
-    showToast('Inscrição realizada com sucesso!', 'success');
+    showToast('Inscrição realizada com sucesso! Confira seu e-mail.', 'success');
   });
-})();
+});
 
 // ===== PARALLAX HERO BG =====
 (function initParallax() {
@@ -496,7 +509,7 @@ function showToast(message, type = 'info') {
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('%c🦁 LionLobs — Site Premium v2.0', 'color: #cea973; font-size: 14px; font-weight: bold;');
+  console.log('%c🦁 LionLobs — Site Premium v2.0 com Carrossel & WhatsApp', 'color: #cea973; font-size: 14px; font-weight: bold;');
 });
 
 
@@ -530,9 +543,9 @@ document.addEventListener('DOMContentLoaded', () => {
     chatbot.classList.remove('active');
   });
 
-  // Fechar ao clicar fora
+  // Fechar ao clicar fora (melhorado para mobile)
   document.addEventListener('click', e => {
-    if (!chatbot.contains(e.target) && !floatBtn.contains(e.target)) {
+    if (!chatbot.contains(e.target) && !floatBtn.contains(e.target) && !e.target.closest('.ai-quick-btn')) {
       chatbot.classList.remove('active');
     }
   });
@@ -559,20 +572,27 @@ document.addEventListener('DOMContentLoaded', () => {
       botMsg.innerHTML = `<div class="ai-message-content">${response}</div>`;
       messagesContainer.appendChild(botMsg);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      input.focus();
     }, 600);
   };
 
   sendBtn.addEventListener('click', sendMessage);
   input.addEventListener('keypress', e => {
-    if (e.key === 'Enter') sendMessage();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendMessage();
+    }
   });
 
-  // Quick replies
+  // Quick replies com melhor UX mobile
   quickReplies.forEach(btn => {
     btn.addEventListener('click', () => {
       const question = btn.dataset.question;
       input.value = question;
-      sendMessage();
+      setTimeout(() => {
+        input.focus();
+        sendMessage();
+      }, 100);
     });
   });
 
@@ -590,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return 'Gerenciamos suas redes sociais com conteúdo profissional, design, legendas e postagens no melhor horário. Suporte diário incluído!';
     }
     if (lower.includes('contato') || lower.includes('whatsapp') || lower.includes('telefone')) {
-      return 'Você pode nos contatar via WhatsApp (48) 98438-0321 ou email lionlobs@gmail.com. Resposta em até 2 horas!';
+      return 'Você pode nos contatar via WhatsApp (48) 98438-0321 ou email lionlobs@gmail.com. Resposta em até 2 horas! Clique no botão "Especialista" para falar direto conosco.';
     }
     if (lower.includes('obrigado') || lower.includes('vlw') || lower.includes('thanks')) {
       return 'De nada! Fico feliz em ajudar. Tem mais alguma dúvida? 😊';
@@ -605,9 +625,11 @@ document.addEventListener('DOMContentLoaded', () => {
     div.textContent = text;
     return div.innerHTML;
   }
+
+  // Auto-focus no input ao abrir
+  floatBtn.addEventListener('click', () => {
+    setTimeout(() => input.focus(), 300);
+  });
 })();
 
-// ===== INIT =====
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('%c🦁 LionLobs — Site Premium v2.0 com IA', 'color: #cea973; font-size: 14px; font-weight: bold;');
-});
+
