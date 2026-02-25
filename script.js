@@ -1,257 +1,613 @@
-/**
- * AGÊNCIA MANU DIGITAL — JavaScript Standalone
- * Funcionalidades: Navbar scroll, Particle Canvas, Testimonials Slider, FAQ Accordion, Form Handling
- */
+/* ===================================================
+   LIONLOBS — Premium JavaScript v2.0
+   Animações, Interatividade e Área de Login
+   =================================================== */
 
-// ── Navbar Scroll Effect ──
-window.addEventListener('scroll', () => {
-    const navbar = document.getElementById('navbar');
-    if (window.scrollY > 60) {
-        navbar.classList.add('scrolled');
-    } else {
-        navbar.classList.remove('scrolled');
-    }
-});
+'use strict';
 
-// ── Smooth Scroll to Section ──
-function scrollToSection(selector) {
-    const element = document.querySelector(selector);
-    if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-    }
-}
+// ===== UTILITÁRIOS =====
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
-// ── Mobile Menu Toggle ──
-function toggleMobileMenu() {
-    const menuToggle = document.getElementById('menuToggle');
-    menuToggle.classList.toggle('active');
-}
+// ===== HEADER SCROLL =====
+(function initHeader() {
+  const header = $('#header');
+  if (!header) return;
 
-// ── Particle Canvas Animation ──
-function initParticles() {
-    const canvas = document.getElementById('particleCanvas');
-    if (!canvas) return;
+  const onScroll = () => {
+    header.classList.toggle('scrolled', window.scrollY > 60);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+// ===== MENU MOBILE =====
+(function initMobileMenu() {
+  const toggle = $('#menuToggle');
+  const menu   = $('#navMenu');
+  if (!toggle || !menu) return;
 
-    const resizeCanvas = () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+  toggle.addEventListener('click', () => {
+    const isOpen = menu.classList.toggle('open');
+    toggle.classList.toggle('open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  });
 
-    // Particle class
-    class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.vx = (Math.random() - 0.5) * 0.4;
-            this.vy = (Math.random() - 0.5) * 0.4;
-            this.size = Math.random() * 2.5 + 0.5;
-            this.opacity = Math.random() * 0.7 + 0.1;
-            this.pulse = Math.random() * Math.PI * 2;
-        }
-
-        update() {
-            this.x += this.vx;
-            this.y += this.vy;
-            this.pulse += 0.02;
-
-            if (this.x < 0) this.x = canvas.width;
-            if (this.x > canvas.width) this.x = 0;
-            if (this.y < 0) this.y = canvas.height;
-            if (this.y > canvas.height) this.y = 0;
-        }
-
-        draw() {
-            const alpha = this.opacity * (0.7 + 0.3 * Math.sin(this.pulse));
-
-            // Glow
-            const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
-            gradient.addColorStop(0, `rgba(245, 215, 142, ${alpha})`);
-            gradient.addColorStop(0.5, `rgba(201, 168, 76, ${alpha * 0.5})`);
-            gradient.addColorStop(1, `rgba(139, 105, 20, 0)`);
-
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
-            ctx.fillStyle = gradient;
-            ctx.fill();
-
-            // Core dot
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(245, 215, 142, ${alpha})`;
-            ctx.fill();
-        }
-    }
-
-    const particleCount = Math.floor(window.innerWidth / 8);
-    const particles = Array.from({ length: particleCount }, () => new Particle());
-
-    const animate = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        particles.forEach(p => {
-            p.update();
-            p.draw();
-        });
-
-        // Draw connections
-        for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < 120) {
-                    const alpha = (1 - dist / 120) * 0.15;
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(201, 168, 76, ${alpha})`;
-                    ctx.lineWidth = 0.5;
-                    ctx.stroke();
-                }
-            }
-        }
-
-        requestAnimationFrame(animate);
-    };
-
-    animate();
-}
-
-// ── Testimonials Slider ──
-let currentTestimonial = 0;
-const testimonials = document.querySelectorAll('.testimonial-card');
-const totalTestimonials = testimonials.length;
-
-function showTestimonial(index) {
-    testimonials.forEach((card, i) => {
-        card.classList.toggle('hidden', i !== index);
+  // Fechar ao clicar em link
+  $$('.nav-link', menu).forEach(link => {
+    link.addEventListener('click', () => {
+      menu.classList.remove('open');
+      toggle.classList.remove('open');
+      document.body.style.overflow = '';
     });
+  });
 
-    // Update dots
-    const dots = document.querySelectorAll('.dot');
-    dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === index);
-    });
-}
-
-function nextTestimonial() {
-    currentTestimonial = (currentTestimonial + 1) % totalTestimonials;
-    showTestimonial(currentTestimonial);
-}
-
-function previousTestimonial() {
-    currentTestimonial = (currentTestimonial - 1 + totalTestimonials) % totalTestimonials;
-    showTestimonial(currentTestimonial);
-}
-
-function initTestimonials() {
-    // Create dots
-    const dotsContainer = document.getElementById('testimonialDots');
-    if (dotsContainer) {
-        for (let i = 0; i < totalTestimonials; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'dot' + (i === 0 ? ' active' : '');
-            dot.onclick = () => {
-                currentTestimonial = i;
-                showTestimonial(i);
-            };
-            dotsContainer.appendChild(dot);
-        }
+  // Fechar ao clicar fora
+  document.addEventListener('click', e => {
+    if (!menu.contains(e.target) && !toggle.contains(e.target)) {
+      menu.classList.remove('open');
+      toggle.classList.remove('open');
+      document.body.style.overflow = '';
     }
+  });
+})();
 
-    // Auto-rotate testimonials
-    setInterval(nextTestimonial, 5000);
+// ===== MODAL DE LOGIN =====
+(function initLogin() {
+  const overlay   = $('#loginOverlay');
+  const btnLogin  = $('#btnLogin');
+  const btnClose  = $('#loginClose');
+  const footerBtn = $('#footerLogin');
+  const form      = $('#loginForm');
+  if (!overlay) return;
 
-    showTestimonial(0);
-}
+  const openModal = () => {
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+  const closeModal = () => {
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  };
 
-// ── FAQ Accordion ──
-function toggleFaq(button) {
-    const faqItem = button.closest('.faq-item');
-    faqItem.classList.toggle('open');
-}
+  btnLogin?.addEventListener('click', openModal);
+  footerBtn?.addEventListener('click', e => { e.preventDefault(); openModal(); });
+  btnClose?.addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
 
-// ── Form Handling ──
-function handleFormSubmit(event) {
-    event.preventDefault();
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
 
-    const form = event.target;
-    const formData = new FormData(form);
-
-    // Log form data (in production, send to server)
-    console.log('Form submitted:', Object.fromEntries(formData));
-
-    // Show success message
-    form.style.display = 'none';
-    const successDiv = document.getElementById('formSuccess');
-    if (successDiv) {
-        successDiv.classList.remove('hidden');
-    }
-
-    // Reset after 5 seconds
+  form?.addEventListener('submit', e => {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    btn.textContent = 'Entrando...';
+    btn.disabled = true;
     setTimeout(() => {
-        form.reset();
-        form.style.display = 'block';
-        if (successDiv) {
-            successDiv.classList.add('hidden');
-        }
-    }, 5000);
+      btn.textContent = 'Entrar';
+      btn.disabled = false;
+      closeModal();
+      showToast('Bem-vindo! Redirecionando para o painel...', 'success');
+    }, 1800);
+  });
+})();
+
+// ===== TOAST NOTIFICATION =====
+function showToast(message, type = 'info') {
+  const existing = $('.ll-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'll-toast';
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: ${type === 'success' ? 'linear-gradient(135deg, #a68354, #cea973)' : '#1f1c1d'};
+    color: ${type === 'success' ? '#1f1c1d' : '#fff'};
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    z-index: 99999;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.4s ease;
+    max-width: 320px;
+    border: 1px solid rgba(206,169,115,0.3);
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.transform = 'translateY(0)';
+    toast.style.opacity = '1';
+  });
+
+  setTimeout(() => {
+    toast.style.transform = 'translateY(20px)';
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 400);
+  }, 3500);
 }
 
-// ── Intersection Observer for Fade-up Animation ──
-function initFadeUpAnimation() {
-    const observer = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        },
-        { threshold: 0.12 }
-    );
+// ===== FADE IN ON SCROLL (IntersectionObserver) =====
+(function initFadeIn() {
+  const elements = $$('.fade-in, .fade-in-left, .fade-in-right');
+  if (!elements.length) return;
 
-    // Note: Add fade-up class to elements you want to animate
-    // For now, we'll add it dynamically to section headers
-    document.querySelectorAll('.section-header').forEach(el => {
-        el.classList.add('fade-up');
-        observer.observe(el);
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        // Stagger delay baseado na posição no grid
+        const siblings = [...entry.target.parentElement.children];
+        const index = siblings.indexOf(entry.target);
+        const delay = Math.min(index * 80, 400);
+
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+        }, delay);
+
+        observer.unobserve(entry.target);
+      }
     });
-}
+  }, {
+    threshold: 0.12,
+    rootMargin: '0px 0px -40px 0px'
+  });
 
-// Add fade-up styles dynamically
-function addFadeUpStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .fade-up {
-            opacity: 0;
-            transform: translateY(40px);
-            transition: opacity 0.7s ease, transform 0.7s ease;
-        }
-        .fade-up.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+  elements.forEach(el => observer.observe(el));
+})();
+
+// ===== DISPOSITIVOS GIRANDO NO SCROLL =====
+(function initDeviceScroll() {
+  const tablet = $('.device-tablet-wrap');
+  const phone  = $('.device-phone-wrap');
+  const hero   = $('.hero');
+  if (!tablet || !phone || !hero) return;
+
+  let lastScrollY = 0;
+  let ticking = false;
+
+  const updateDevices = () => {
+    const scrollY = window.scrollY;
+    const heroH   = hero.offsetHeight;
+    const progress = Math.min(scrollY / heroH, 1); // 0 a 1
+
+    // Rotação 3D dinâmica baseada no scroll
+    const tabletRotY = -8 + (progress * -20);   // -8deg a -28deg
+    const tabletRotX = 4  + (progress * 10);    // 4deg a 14deg
+    const tabletZ    = progress * -30;           // afasta no Z
+    const tabletY    = progress * -40;           // sobe
+
+    const phoneRotY  = 5  + (progress * 25);    // 5deg a 30deg
+    const phoneRotX  = -3 + (progress * -12);   // -3deg a -15deg
+    const phoneZ     = progress * -20;
+    const phoneY     = progress * -30;
+
+    tablet.style.transform = `
+      rotateY(${tabletRotY}deg)
+      rotateX(${tabletRotX}deg)
+      translateY(${tabletY}px)
+      translateZ(${tabletZ}px)
     `;
-    document.head.appendChild(style);
-}
+    phone.style.transform = `
+      rotateY(${phoneRotY}deg)
+      rotateX(${phoneRotX}deg)
+      translateY(${phoneY}px)
+      translateZ(${phoneZ}px)
+    `;
 
-// ── Initialize on DOM Ready ──
+    ticking = false;
+  };
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateDevices);
+      ticking = true;
+    }
+  }, { passive: true });
+})();
+
+// ===== CONTADORES ANIMADOS =====
+(function initCounters() {
+  const counters = $$('.result-num[data-target]');
+  if (!counters.length) return;
+
+  const animateCounter = (el) => {
+    const target   = parseInt(el.dataset.target, 10);
+    const duration = 2000;
+    const start    = performance.now();
+
+    const update = (now) => {
+      const elapsed  = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Easing: easeOutExpo
+      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      el.textContent = Math.floor(ease * target);
+      if (progress < 1) requestAnimationFrame(update);
+    };
+    requestAnimationFrame(update);
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(el => observer.observe(el));
+})();
+
+// ===== FAQ ACCORDION =====
+(function initFAQ() {
+  const items = $$('.faq-item');
+  if (!items.length) return;
+
+  items.forEach(item => {
+    const btn = item.querySelector('.faq-q');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      const isOpen = item.classList.contains('open');
+
+      // Fechar todos
+      items.forEach(i => i.classList.remove('open'));
+
+      // Abrir o clicado (se estava fechado)
+      if (!isOpen) item.classList.add('open');
+    });
+  });
+})();
+
+// ===== SMOOTH SCROLL =====
+(function initSmoothScroll() {
+  $$('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', e => {
+      const target = $(anchor.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+
+      const headerH = $('#header')?.offsetHeight || 80;
+      const top = target.getBoundingClientRect().top + window.scrollY - headerH - 16;
+
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+  });
+})();
+
+// ===== ACTIVE NAV LINK =====
+(function initActiveNav() {
+  const sections = $$('section[id]');
+  const links    = $$('.nav-link[href^="#"]');
+  if (!sections.length || !links.length) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        links.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+        });
+      }
+    });
+  }, {
+    threshold: 0.3,
+    rootMargin: '-80px 0px -60% 0px'
+  });
+
+  sections.forEach(s => observer.observe(s));
+})();
+
+// ===== FORMULÁRIO DE CONTATO =====
+(function initContactForm() {
+  const form = $('#contactForm');
+  if (!form) return;
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+
+    const btn  = form.querySelector('button[type="submit"]');
+    const span = btn.querySelector('span');
+
+    btn.disabled = true;
+    if (span) span.textContent = 'Enviando...';
+
+    // Simula envio
+    setTimeout(() => {
+      btn.disabled = false;
+      if (span) span.textContent = 'Enviar Mensagem';
+      form.reset();
+      showToast('Mensagem enviada! Entraremos em contato em breve.', 'success');
+    }, 2000);
+  });
+})();
+
+// ===== NEWSLETTER =====
+(function initNewsletter() {
+  const btn = $('.newsletter button');
+  const inp = $('.newsletter input');
+  if (!btn || !inp) return;
+
+  btn.addEventListener('click', () => {
+    const email = inp.value.trim();
+    if (!email || !email.includes('@')) {
+      showToast('Por favor, insira um e-mail válido.');
+      return;
+    }
+    inp.value = '';
+    showToast('Inscrição realizada com sucesso!', 'success');
+  });
+})();
+
+// ===== PARALLAX HERO BG =====
+(function initParallax() {
+  const bg = $('.hero-bg-img');
+  if (!bg) return;
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    if (scrollY < window.innerHeight * 1.5) {
+      bg.style.transform = `translateY(${scrollY * 0.3}px)`;
+    }
+  }, { passive: true });
+})();
+
+// ===== CURSOR GLOW (Desktop) =====
+(function initCursorGlow() {
+  if (window.innerWidth < 1024) return;
+
+  const glow = document.createElement('div');
+  glow.style.cssText = `
+    position: fixed;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(166,131,84,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    transform: translate(-50%, -50%);
+    transition: left 0.15s ease, top 0.15s ease;
+  `;
+  document.body.appendChild(glow);
+
+  document.addEventListener('mousemove', e => {
+    glow.style.left = e.clientX + 'px';
+    glow.style.top  = e.clientY + 'px';
+  });
+})();
+
+// ===== CARD TILT EFFECT (Desktop) =====
+(function initCardTilt() {
+  if (window.innerWidth < 1024) return;
+
+  const cards = $$('.service-card, .pricing-card, .testimonial-card');
+
+  cards.forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect   = card.getBoundingClientRect();
+      const x      = e.clientX - rect.left;
+      const y      = e.clientY - rect.top;
+      const cx     = rect.width  / 2;
+      const cy     = rect.height / 2;
+      const rotX   = ((y - cy) / cy) * -6;
+      const rotY   = ((x - cx) / cx) * 6;
+
+      card.style.transform = `
+        translateY(-6px)
+        rotateX(${rotX}deg)
+        rotateY(${rotY}deg)
+      `;
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+})();
+
+// ===== GOLD SHIMMER ON HOVER =====
+(function initShimmer() {
+  const goldElements = $$('.btn-primary, .btn-login');
+
+  goldElements.forEach(el => {
+    el.addEventListener('mousemove', e => {
+      const rect = el.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      el.style.backgroundImage = `
+        linear-gradient(
+          135deg,
+          #a68354 0%,
+          #cea973 ${x - 20}%,
+          #f0d090 ${x}%,
+          #cea973 ${x + 20}%,
+          #a68354 100%
+        )
+      `;
+    });
+
+    el.addEventListener('mouseleave', () => {
+      el.style.backgroundImage = '';
+    });
+  });
+})();
+
+// ===== LOADING SCREEN =====
+(function initLoading() {
+  const loader = document.createElement('div');
+  loader.id = 'pageLoader';
+  loader.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: #0d0b0c;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    transition: opacity 0.6s ease;
+  `;
+  loader.innerHTML = `
+    <img src="lionlobs-logo.png" alt="LionLobs" style="height:60px;opacity:0;transition:opacity 0.5s ease 0.2s;">
+    <div style="
+      width: 200px;
+      height: 2px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    ">
+      <div id="loaderBar" style="
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #a68354, #cea973, #e6bc75);
+        border-radius: 2px;
+        transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+      "></div>
+    </div>
+  `;
+  document.body.appendChild(loader);
+
+  // Animar logo
+  setTimeout(() => {
+    const img = loader.querySelector('img');
+    if (img) img.style.opacity = '1';
+  }, 100);
+
+  // Animar barra
+  setTimeout(() => {
+    const bar = $('#loaderBar');
+    if (bar) bar.style.width = '100%';
+  }, 200);
+
+  // Remover loader
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      loader.style.opacity = '0';
+      setTimeout(() => loader.remove(), 600);
+    }, 800);
+  });
+})();
+
+// ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
-    initParticles();
-    initTestimonials();
-    addFadeUpStyles();
-    initFadeUpAnimation();
+  console.log('%c🦁 LionLobs — Site Premium v2.0', 'color: #cea973; font-size: 14px; font-weight: bold;');
 });
 
-// ── Prevent form submission if needed ──
-const contactForm = document.getElementById('contactForm');
-if (contactForm) {
-    contactForm.addEventListener('submit', handleFormSubmit);
-}
+
+// ===== CHATBOT IA =====
+(function initAIChatbot() {
+  const floatBtn = $('#aiFloatBtn');
+  const chatbot = $('#aiChatbot');
+  const closeBtn = $('#aiClose');
+  const input = $('#aiInput');
+  const sendBtn = $('#aiSend');
+  const messagesContainer = $('#aiMessages');
+  const quickReplies = $$('.ai-quick-btn');
+
+  if (!floatBtn || !chatbot) return;
+
+  // Respostas automáticas da IA
+  const aiResponses = {
+    'Quais são seus serviços?': 'Oferecemos edição profissional de vídeos, gerenciamento completo de redes sociais, identidade visual e branding, landing pages premium, tráfego pago estratégico, e consultoria em neuromarketing. Qual desses serviços te interessa?',
+    'Qual é o valor dos pacotes?': 'Nossos pacotes variam de acordo com o serviço. Temos opções desde 1 vídeo editado até planos mensais com 16 vídeos/mês. Para valores específicos, recomendo falar com nosso especialista via WhatsApp!',
+    'Como funciona o suporte?': 'Oferecemos suporte diário via WhatsApp em todos os nossos planos. Você terá acesso direto ao nosso time para tirar dúvidas, solicitar ajustes e acompanhar seus projetos em tempo real.',
+    'Falar com um especialista': 'Ótimo! Vou conectá-lo com nosso especialista. Clique no botão "Acessar via WhatsApp" para falar diretamente conosco. Estamos prontos para ajudar! 🚀'
+  };
+
+  // Abrir/fechar chatbot
+  floatBtn.addEventListener('click', () => {
+    chatbot.classList.add('active');
+    input.focus();
+  });
+
+  closeBtn.addEventListener('click', () => {
+    chatbot.classList.remove('active');
+  });
+
+  // Fechar ao clicar fora
+  document.addEventListener('click', e => {
+    if (!chatbot.contains(e.target) && !floatBtn.contains(e.target)) {
+      chatbot.classList.remove('active');
+    }
+  });
+
+  // Enviar mensagem
+  const sendMessage = () => {
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Mensagem do usuário
+    const userMsg = document.createElement('div');
+    userMsg.className = 'ai-message ai-message-user';
+    userMsg.innerHTML = `<div class="ai-message-content">${escapeHtml(text)}</div>`;
+    messagesContainer.appendChild(userMsg);
+
+    input.value = '';
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Resposta da IA (simulada)
+    setTimeout(() => {
+      const response = aiResponses[text] || getDefaultResponse(text);
+      const botMsg = document.createElement('div');
+      botMsg.className = 'ai-message ai-message-bot';
+      botMsg.innerHTML = `<div class="ai-message-content">${response}</div>`;
+      messagesContainer.appendChild(botMsg);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }, 600);
+  };
+
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keypress', e => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  // Quick replies
+  quickReplies.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const question = btn.dataset.question;
+      input.value = question;
+      sendMessage();
+    });
+  });
+
+  // Função para gerar resposta padrão
+  function getDefaultResponse(userInput) {
+    const lower = userInput.toLowerCase();
+    
+    if (lower.includes('preço') || lower.includes('valor') || lower.includes('custa')) {
+      return 'Temos opções de pacotes para todos os orçamentos! Desde edição de vídeos individuais até planos mensais completos. Fale com nosso especialista para um orçamento personalizado.';
+    }
+    if (lower.includes('video') || lower.includes('edição')) {
+      return 'Nossa edição de vídeos inclui roteiro pronto, edição profissional e legendas otimizadas. Temos pacotes de 1 a 16 vídeos por mês!';
+    }
+    if (lower.includes('rede') || lower.includes('social') || lower.includes('instagram') || lower.includes('tiktok')) {
+      return 'Gerenciamos suas redes sociais com conteúdo profissional, design, legendas e postagens no melhor horário. Suporte diário incluído!';
+    }
+    if (lower.includes('contato') || lower.includes('whatsapp') || lower.includes('telefone')) {
+      return 'Você pode nos contatar via WhatsApp (48) 98438-0321 ou email lionlobs@gmail.com. Resposta em até 2 horas!';
+    }
+    if (lower.includes('obrigado') || lower.includes('vlw') || lower.includes('thanks')) {
+      return 'De nada! Fico feliz em ajudar. Tem mais alguma dúvida? 😊';
+    }
+    
+    return 'Ótima pergunta! Para uma resposta mais detalhada, recomendo falar com nosso especialista via WhatsApp. Estamos sempre prontos para ajudar!';
+  }
+
+  // Escape HTML
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+})();
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('%c🦁 LionLobs — Site Premium v2.0 com IA', 'color: #cea973; font-size: 14px; font-weight: bold;');
+});
