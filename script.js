@@ -631,5 +631,3 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => input.focus(), 300);
   });
 })();
-
-
